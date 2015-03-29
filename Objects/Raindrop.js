@@ -4,13 +4,13 @@
 
 Raindrop = function(){
     var dropMat = new THREE.MeshPhongMaterial({color:0x0000FF})
-    var baseGeo = new THREE.SphereGeometry(1, 10, 10);
-    var topGeo = new THREE.CylinderGeometry(0, 0.5, 1);
+    var baseGeo = new THREE.SphereGeometry(0.25, 10, 10);
+    var topGeo = new THREE.CylinderGeometry(0, 0.2, 0.4, 50);
     var base = new THREE.Mesh(baseGeo, dropMat);
     var top = new THREE.Mesh(topGeo, dropMat);
 
     var dropGroup = new THREE.Group();
-    topGeo.translateZ(1);
+    top.translateY(0.35);
     dropGroup.add(top);
     dropGroup.add(base);
     return dropGroup;

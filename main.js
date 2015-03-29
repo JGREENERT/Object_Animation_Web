@@ -32,17 +32,37 @@ require([], function(){
     //		default 3 points lightning					//
     //////////////////////////////////////////////////////////////////////////////////
 
-    var ambientLight= new THREE.AmbientLight( 0x202020 )
+    /*Moon Geo*/
+    var moonMat = new THREE.MeshPhongMaterial({color:0xFFFFFF})
+    var moonGeo = new THREE.SphereGeometry(1, 10, 10);
+    var moon = new THREE.Mesh(moonGeo, moonMat);
+
+    moon.translateY(16);
+    moon.translateZ(-23);
+    moon.translateX(-15);
+
+    scene.add(moon);
+
+
+    var ambientLight= new THREE.AmbientLight( 0xFFFFFF )
+    ambientLight.position.set(-15, 16, -23)
     scene.add( ambientLight)
+
+
+
     var frontLight	= new THREE.DirectionalLight(0xffffff, 1);
     frontLight.position.set(10, 35, 0.0)
-    scene.add( frontLight )
-    scene.add ( new THREE.DirectionalLightHelper (frontLight, 1));
+    //frontLight.position.set(-15, 16, -23)
+   // scene.add( frontLight )
+   // scene.add ( new THREE.DirectionalLightHelper (frontLight, 1));
     var backLight	= new THREE.SpotLight('white', 1, 0, Math.PI / 6);
     backLight.castShadow = true;
-    backLight.position.set(-4, 20, 10)
+    backLight.position.set(8.8, 9.5, 0)
     scene.add( backLight )
     scene.add ( new THREE.SpotLightHelper (backLight, 0.2));
+
+    var last_lightning = 0;
+
 
     // TEXTURE setup
     var path = "textures/MAK/"
@@ -71,19 +91,12 @@ require([], function(){
     raindrop.position.z = 20;
     scene.add(raindrop);
 
-    /*Other*/
-    var wheel_cf = new THREE.Matrix4();
-    wheel_cf.makeTranslation(0, -20, 0);
-    var arm_cf = new THREE.Matrix4();
-    arm_cf.makeRotationZ(THREE.Math.degToRad(40));
-    var wheel = new Wheel();
-    var arm = new SwingArm(20);
-//    arm.add (new THREE.AxisHelper(2));
-    var frame = new SwingFrame();
-    arm.add (wheel);
-    frame.add(arm);
-    scene.add (frame);
-    scene.add (new THREE.AxisHelper(4));
+    /*Lamp*/
+    var lamp = new Lamp();
+    var lamp_cf = new THREE.Matrix4();
+    lamp.position.x = 10;
+    scene.add(lamp);
+
 
     /* Load the first texture image */
     var stone_tex = THREE.ImageUtils.loadTexture("textures/stone256.jpg");
@@ -106,25 +119,10 @@ require([], function(){
     wood_tex.wrapT = THREE.MirroredRepeatWrapping;
     var groundPlane = new THREE.PlaneBufferGeometry(40, 40, 10, 10);
     /* attach the texture as the "map" property of the material */
-    var groundMat = new THREE.MeshPhongMaterial({color:0x1d6438, ambient:0x1d6438, map:stone_tex});
+    var groundMat = new THREE.MeshPhongMaterial({color:0x1d6438});
     var ground = new THREE.Mesh (groundPlane, groundMat);
     ground.rotateX(THREE.Math.degToRad(-90));
     scene.add (ground);
-
-    var sphereGeo = new THREE.SphereGeometry(8, 30, 20);
-    /* attach the texture as the "map" property of the material */
-    var sphereMat = new THREE.MeshBasicMaterial ({envMap:cubemap});
-    var sphere = new THREE.Mesh (sphereGeo, sphereMat);
-    sphere.position.x = 10;
-    sphere.position.y = 10;
-    sphere.position.z = 10;
-    scene.add(sphere);
-//    var grid = new THREE.GridHelper(50, 1);
-//    scene.add (grid);
-
-//  var myCone = new Cone(40);
-//  var coneMat = new THREE.MeshPhongMaterial({color:0x0f0650});
-//  scene.add(new THREE.Mesh(myCone, coneMat));
 
     camera.lookAt(new THREE.Vector3(0, 5, 0));
 //    mesh.matrixAutoUpdate = false;
@@ -136,18 +134,12 @@ require([], function(){
         var rot = new THREE.Quaternion();
         var vscale = new THREE.Vector3();
 
-        wheel_cf.multiply(new THREE.Matrix4().makeRotationZ(THREE.Math.degToRad(delta * 72)));
-        wheel_cf.decompose(tran, quat, vscale);
-        wheel.position.copy(tran);
-        wheel.quaternion.copy(quat);
+        //wheel_cf.multiply(new THREE.Matrix4().makeRotationZ(THREE.Math.degToRad(delta * 72)));
+        //wheel_cf.decompose(tran, quat, vscale);
+        //wheel.position.copy(tran);
+        //wheel.quaternion.copy(quat);
 
-        /* TODO: when animation is resumed after a pause, the arm jumps */
-        var curr_angle = 40.0 * Math.cos(now);
-        arm_cf.copy(new THREE.Matrix4().makeRotationZ(THREE.Math.degToRad(curr_angle)));
-        arm_cf.decompose (tran, quat, vscale);
-//        rot.setFromAxisAngle( new THREE.Vector3(0,0,1), THREE.Math.degToRad(arm_angle));
-        arm.position.copy(tran);
-        arm.quaternion.copy(quat);
+
     });
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -194,5 +186,18 @@ require([], function(){
         onRenderFcts.forEach(function(f){
             f(deltaMsec/1000, nowMsec/1000)
         })
+
+
+        /*Lightning*/
+        if((Math.random %  100) < 2){
+            scene.add(frontLight);
+            last_lightning = nowMsec;
+        } else{
+            if(nowMsec - last_lightning < 10000){
+                scene.remove(frontLight);
+            }
+        }
+
+
     })
 });
