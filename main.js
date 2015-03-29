@@ -26,23 +26,42 @@ require([], function(){
     var onRenderFcts= [];
 
     // handle window resize events
-    var winResize	= new THREEx.WindowResize(renderer, camera)
+    var winResize	= new THREEx.WindowResize(renderer, camera);
 
     //////////////////////////////////////////////////////////////////////////////////
     //		default 3 points lightning					//
     //////////////////////////////////////////////////////////////////////////////////
 
-    var ambientLight= new THREE.AmbientLight( 0x202020 )
-    scene.add( ambientLight)
+    /*Moon Geo*/
+    var moonMat = new THREE.MeshPhongMaterial({color:0xFFFFFF});
+    var moonGeo = new THREE.SphereGeometry(1, 10, 10);
+    var moon = new THREE.Mesh(moonGeo, moonMat);
+
+    moon.translateY(16);
+    moon.translateZ(-23);
+    moon.translateX(-15);
+
+    scene.add(moon);
+
+
+    var ambientLight= new THREE.AmbientLight( 0xFFFFFF );
+    ambientLight.position.set(-15, 16, -23);
+    scene.add( ambientLight);
+
+
+
     var frontLight	= new THREE.DirectionalLight(0xffffff, 1);
-    frontLight.position.set(10, 35, 0.0)
-    scene.add( frontLight )
-    scene.add ( new THREE.DirectionalLightHelper (frontLight, 1));
+    frontLight.position.set(10, 35, 0.0);
+    //frontLight.position.set(-15, 16, -23)
+   // scene.add( frontLight )
+   // scene.add ( new THREE.DirectionalLightHelper (frontLight, 1));
     var backLight	= new THREE.SpotLight('white', 1, 0, Math.PI / 6);
     backLight.castShadow = true;
-    backLight.position.set(-4, 20, 10)
-    scene.add( backLight )
+    backLight.position.set(8.8, 9.5, 0);
+    scene.add( backLight );
     scene.add ( new THREE.SpotLightHelper (backLight, 0.2));
+
+    var last_lightning = 0;
 
     //////////////////////////////////////////////////////////////////////////////////
     //		add an object and make it move					//
@@ -58,6 +77,12 @@ require([], function(){
     var mgr = new MerryGoRound();
     var mgr_cf = new THREE.Matrix4();
     scene.add(mgr);
+
+    /*Lamp*/
+    var lamp = new Lamp();
+    var lamp_cf = new THREE.Matrix4();
+    lamp.position.x = 10;
+    scene.add(lamp);
 
     //scene.add (new THREE.AxisHelper(4));
 
@@ -109,17 +134,30 @@ require([], function(){
     //////////////////////////////////////////////////////////////////////////////////
     //		Rendering Loop runner						//
     //////////////////////////////////////////////////////////////////////////////////
-    var lastTimeMsec= null
+    var lastTimeMsec= null;
     requestAnimationFrame(function animate(nowMsec){
         // keep looping
         requestAnimationFrame( animate );
         // measure time
-        lastTimeMsec	= lastTimeMsec || nowMsec-1000/60
-        var deltaMsec	= Math.min(200, nowMsec - lastTimeMsec)
-        lastTimeMsec	= nowMsec
+        lastTimeMsec	= lastTimeMsec || nowMsec-1000/60;
+        var deltaMsec	= Math.min(200, nowMsec - lastTimeMsec);
+        lastTimeMsec	= nowMsec;
         // call each update function
         onRenderFcts.forEach(function(f){
             f(deltaMsec/1000, nowMsec/1000)
-        })
+        });
+
+
+        /*Lightning*/
+        if((Math.random %  100) < 2){
+            scene.add(frontLight);
+            last_lightning = nowMsec;
+        } else{
+            if(nowMsec - last_lightning < 10000){
+                scene.remove(frontLight);
+            }
+        }
+
+
     })
 });
