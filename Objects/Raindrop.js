@@ -10,7 +10,7 @@ Raindrop = function(){
     var top = new THREE.Mesh(topGeo, dropMat);
 
     var dropGroup = new THREE.Group();
-    topGeo.translateZ(1);
+    top.translateZ(1);
     dropGroup.add(top);
     dropGroup.add(base);
     return dropGroup;
