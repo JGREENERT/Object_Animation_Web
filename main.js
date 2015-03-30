@@ -10,6 +10,9 @@ require([], function(){
     renderer.setSize( CANVAS_WIDTH, CANVAS_HEIGHT );
     var gbox = document.getElementById('graphicsbox');
     var pauseAnim = false;
+    var rainArray = [];
+    var windX = 0;
+    var windZ = 0;
     //document.body.appendChild(gbox);
     gbox.appendChild( renderer.domElement );
 
@@ -26,73 +29,111 @@ require([], function(){
     var onRenderFcts= [];
 
     // handle window resize events
-    var winResize	= new THREEx.WindowResize(renderer, camera);
+    var winResize	= new THREEx.WindowResize(renderer, camera)
 
     //////////////////////////////////////////////////////////////////////////////////
     //		default 3 points lightning					//
     //////////////////////////////////////////////////////////////////////////////////
 
-    /*Moon Geo*/
-    var moonMat = new THREE.MeshPhongMaterial({color:0xFFFFFF});
-    var moonGeo = new THREE.SphereGeometry(1, 10, 10);
-    var moon = new THREE.Mesh(moonGeo, moonMat);
-
-    moon.translateY(16);
-    moon.translateZ(-23);
-    moon.translateX(-15);
-
-    scene.add(moon);
-
-
-    var ambientLight= new THREE.AmbientLight( 0xFFFFFF );
-    ambientLight.position.set(-15, 16, -23);
-    scene.add( ambientLight);
-
-
-
+    var ambientLight= new THREE.AmbientLight( 0x202020 )
+    scene.add( ambientLight)
     var frontLight	= new THREE.DirectionalLight(0xffffff, 1);
-    frontLight.position.set(10, 35, 0.0);
-    //frontLight.position.set(-15, 16, -23)
-   // scene.add( frontLight )
-   // scene.add ( new THREE.DirectionalLightHelper (frontLight, 1));
+    frontLight.position.set(10, 35, 0.0)
+    scene.add( frontLight )
+    scene.add ( new THREE.DirectionalLightHelper (frontLight, 1));
     var backLight	= new THREE.SpotLight('white', 1, 0, Math.PI / 6);
     backLight.castShadow = true;
-    backLight.position.set(8.8, 9.5, 0);
-    scene.add( backLight );
+    backLight.position.set(-4, 20, 10)
+    scene.add( backLight )
     scene.add ( new THREE.SpotLightHelper (backLight, 0.2));
 
-    var last_lightning = 0;
+    // TEXTURE setup
+    var path = "textures/MAK/"
+    /* The image names can be ANYTHING, but the the order of the SIX images
+     in the array will be used as follows:
+     the 1st image => Positive X axis
+     the 2nd image => Negative X axis
+     the 3rh image => Positive Y axis
+     the 4th image => Negative Y axis
+     the 5th image => Positive Z axis
+     the 6th image => Negative Z axis
+     */
 
+    var images = [path + "posx.png", path + "negx.png",
+        path + "posy.png", path + "negy.png",
+        path + "posz.png", path + "negz.png"];
+
+    var cubemap = THREE.ImageUtils.loadTextureCube( images );
     //////////////////////////////////////////////////////////////////////////////////
     //		add an object and make it move					//
     //////////////////////////////////////////////////////////////////////////////////
     /*Raindrop*/
     var raindrop = new Raindrop();
     var raindrop_cf = new THREE.Matrix4();
-    raindrop.position.y = 10;
-    raindrop.position.z = 20;
-    scene.add(raindrop);
+    for(var i = 0; i < 50; i++){
+        rainArray[i] = new Raindrop();
+        rainArray[i].position.y = 10+i;
+        rainArray[i].position.z = Math.random() * 30 - 10;
+        rainArray[i].position.x = Math.random() * 30 - 10;
+        scene.add(rainArray[i]);
+    }
+    /*Other*/
+//    var wheel_cf = new THREE.Matrix4();
+//    wheel_cf.makeTranslation(0, -20, 0);
+//    var arm_cf = new THREE.Matrix4();
+//    arm_cf.makeRotationZ(THREE.Math.degToRad(40));
+//    var wheel = new Wheel();
+//    var arm = new SwingArm(20);
+////    arm.add (new THREE.AxisHelper(2));
+//    var frame = new SwingFrame();
+//    arm.add (wheel);
+//    frame.add(arm);
+//    scene.add (frame);
+//    scene.add (new THREE.AxisHelper(4));
 
-    /*Merry Go Round*/
-    var mgr = new MerryGoRound();
-    var mgr_cf = new THREE.Matrix4();
-    scene.add(mgr);
+    /* Load the first texture image */
+    var stone_tex = THREE.ImageUtils.loadTexture("textures/stone256.jpg");
+    /* for repeat to work, the image size must be 2^k */
 
-    /*Lamp*/
-    var lamp = new Lamp();
-    var lamp_cf = new THREE.Matrix4();
-    lamp.position.x = 10;
-    scene.add(lamp);
+    /* repeat the texture 4 times in both direction */
+    stone_tex.repeat.set(4,4);
+    stone_tex.wrapS = THREE.RepeatWrapping;
+    stone_tex.wrapT = THREE.RepeatWrapping;
 
-    //scene.add (new THREE.AxisHelper(4));
+    /* Load the second texture image */
+    var wood_tex = THREE.ImageUtils.loadTexture("textures/wood256.jpg");
 
+    /* mirror repeat the texture 2 times, without
+     * mirror repeat the seam between the left
+     * and right edge of the texture will be
+     * visible */
+    wood_tex.repeat.set(2,2);
+    wood_tex.wrapS = THREE.MirroredRepeatWrapping;
+    wood_tex.wrapT = THREE.MirroredRepeatWrapping;
     var groundPlane = new THREE.PlaneBufferGeometry(40, 40, 10, 10);
+    /* attach the texture as the "map" property of the material */
     var groundMat = new THREE.MeshPhongMaterial({color:0x1d6438});
     var ground = new THREE.Mesh (groundPlane, groundMat);
     ground.rotateX(THREE.Math.degToRad(-90));
     scene.add (ground);
 
+    //var sphereGeo = new THREE.SphereGeometry(8, 30, 20);
+    /* attach the texture as the "map" property of the material */
+    //var sphereMat = new THREE.MeshBasicMaterial ({envMap:cubemap});
+    //var sphere = new THREE.Mesh (sphereGeo, sphereMat);
+    //sphere.position.x = 10;
+    //sphere.position.y = 10;
+    //sphere.position.z = 10;
+    //scene.add(sphere);
+//    var grid = new THREE.GridHelper(50, 1);
+//    scene.add (grid);
+
+//  var myCone = new Cone(40);
+//  var coneMat = new THREE.MeshPhongMaterial({color:0x0f0650});
+//  scene.add(new THREE.Mesh(myCone, coneMat));
+
     camera.lookAt(new THREE.Vector3(0, 5, 0));
+//    mesh.matrixAutoUpdate = false;
 
     onRenderFcts.push(function(delta, now){
         if (pauseAnim) return;
@@ -100,6 +141,19 @@ require([], function(){
         var quat = new THREE.Quaternion();
         var rot = new THREE.Quaternion();
         var vscale = new THREE.Vector3();
+
+        //wheel_cf.multiply(new THREE.Matrix4().makeRotationZ(THREE.Math.degToRad(delta * 72)));
+        //wheel_cf.decompose(tran, quat, vscale);
+        //wheel.position.copy(tran);
+        //wheel.quaternion.copy(quat);
+
+        /* TODO: when animation is resumed after a pause, the arm jumps */
+//        var curr_angle = 40.0 * Math.cos(now);
+//        arm_cf.copy(new THREE.Matrix4().makeRotationZ(THREE.Math.degToRad(curr_angle)));
+//        arm_cf.decompose (tran, quat, vscale);
+////        rot.setFromAxisAngle( new THREE.Vector3(0,0,1), THREE.Math.degToRad(arm_angle));
+//        arm.position.copy(tran);
+//        arm.quaternion.copy(quat);
     });
 
     //////////////////////////////////////////////////////////////////////////////////
@@ -131,33 +185,60 @@ require([], function(){
         renderer.render( scene, camera );
     });
 
+    window.addEventListener("keydown", moveSomething, false);
+
+    function moveSomething(e) {
+        switch(e.keyCode) {
+            case 37:
+                if(windX > -.4) {
+                    windX -= .05;
+                }
+                break;
+            case 38:
+                if(windZ > -.4) {
+                    windZ -= .05;
+                }
+                break;
+            case 39:
+                if(windX < .4) {
+                    windX += .05;
+                }
+                break;
+            case 40:
+                if(windZ < .4) {
+                    windZ += .05;
+                }
+                break;
+        }
+    }
+
     //////////////////////////////////////////////////////////////////////////////////
+
     //		Rendering Loop runner						//
     //////////////////////////////////////////////////////////////////////////////////
     var lastTimeMsec= null;
+    var dropPosition = 10;
     requestAnimationFrame(function animate(nowMsec){
         // keep looping
         requestAnimationFrame( animate );
         // measure time
-        lastTimeMsec	= lastTimeMsec || nowMsec-1000/60;
-        var deltaMsec	= Math.min(200, nowMsec - lastTimeMsec);
-        lastTimeMsec	= nowMsec;
+        lastTimeMsec	= lastTimeMsec || nowMsec-1000/60
+        var deltaMsec	= Math.min(200, nowMsec - lastTimeMsec)
+        lastTimeMsec	= nowMsec
+        for(var i = 0; i < rainArray.length; i++) {
+            if (rainArray[i].position.y > 0) {
+                rainArray[i].position.y -= .1;
+                rainArray[i].position.z += windZ;
+                rainArray[i].position.x += windX;
+            } else {
+                rainArray[i].position.y = 10+i;
+                rainArray[i].position.z = Math.random() * 30 - 15;
+                rainArray[i].position.x = Math.random() * 30 - 15;
+            }
+        }
         // call each update function
         onRenderFcts.forEach(function(f){
             f(deltaMsec/1000, nowMsec/1000)
-        });
-
-
-        /*Lightning*/
-        if((Math.random %  100) < 2){
-            scene.add(frontLight);
-            last_lightning = nowMsec;
-        } else{
-            if(nowMsec - last_lightning < 10000){
-                scene.remove(frontLight);
-            }
-        }
-
-
+        })
     })
 });
