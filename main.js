@@ -42,19 +42,22 @@ require([], function(){
 
     scene.add(moon);
 
-    var ambientLight= new THREE.AmbientLight( 0xFFFFFF );
+    var ambientLight= new THREE.AmbientLight( 0xC0C0C0 );
     ambientLight.position.set(-15, 16, -23);
     scene.add( ambientLight);
 
     var frontLight	= new THREE.DirectionalLight(0xffffff, 1);
     frontLight.position.set(10, 35, 0.0);
-    scene.add( frontLight );
-    scene.add ( new THREE.DirectionalLightHelper (frontLight, 1));
+    //frontLight.position.set(-15, 16, -23)
+    // scene.add( frontLight )
+    // scene.add ( new THREE.DirectionalLightHelper (frontLight, 1));
     var backLight	= new THREE.SpotLight('white', 1, 0, Math.PI / 6);
     backLight.castShadow = true;
-    backLight.position.set(-4, 20, 10);
+    backLight.position.set(8.8, 9.5, 0);
     scene.add( backLight );
     scene.add ( new THREE.SpotLightHelper (backLight, 0.2));
+
+    var last_lightning = 0;
 
     //////////////////////////////////////////////////////////////////////////////////
     //		add an object and make it move					//
@@ -62,6 +65,7 @@ require([], function(){
     /*Raindrop*/
     var raindrop = new Raindrop();
     var raindrop_cf = new THREE.Matrix4();
+
     for(var i = 0; i < 50; i++){
         rainArray[i] = new Raindrop();
         rainArray[i].position.y = 10+i;
@@ -69,6 +73,19 @@ require([], function(){
         rainArray[i].position.x = Math.random() * 30 - 10;
         scene.add(rainArray[i]);
     }
+
+    /*Merry Go Round*/
+    var mgr = new MerryGoRound();
+    var mgr_cf = new THREE.Matrix4();
+    scene.add(mgr);
+
+    /*Lamp*/
+    var lamp = new Lamp();
+    var lamp_cf = new THREE.Matrix4();
+    lamp.position.x = 10;
+    scene.add(lamp);
+
+    //scene.add (new THREE.AxisHelper(4));
 
     var groundPlane = new THREE.PlaneBufferGeometry(40, 40, 10, 10);
     var groundMat = new THREE.MeshPhongMaterial({color:0x1d6438});
@@ -102,6 +119,32 @@ require([], function(){
         }
     }, false);
 
+    window.addEventListener("keydown", moveSomething, false);
+
+    function moveSomething(e) {
+        switch (e.keyCode) {
+            case 37:
+                if (windX > -.4) {
+                    windX -= .05;
+                }
+                break;
+            case 38:
+                if (windZ > -.4) {
+                    windZ -= .05;
+                }
+                break;
+            case 39:
+                if (windX < .4) {
+                    windX += .05;
+                }
+                break;
+            case 40:
+                if (windZ < .4) {
+                    windZ += .05;
+                }
+                break;
+        }
+    }
     onRenderFcts.push(function(delta, now){
         camera.position.x += (mouse.x*30 - camera.position.x) * (delta*3);
         camera.position.y += (mouse.y*30 - camera.position.y) * (delta*3);
@@ -115,35 +158,7 @@ require([], function(){
         renderer.render( scene, camera );
     });
 
-    window.addEventListener("keydown", moveSomething, false);
-
-    function moveSomething(e) {
-        switch(e.keyCode) {
-            case 37:
-                if(windX > -.4) {
-                    windX -= .05;
-                }
-                break;
-            case 38:
-                if(windZ > -.4) {
-                    windZ -= .05;
-                }
-                break;
-            case 39:
-                if(windX < .4) {
-                    windX += .05;
-                }
-                break;
-            case 40:
-                if(windZ < .4) {
-                    windZ += .05;
-                }
-                break;
-        }
-    }
-
     //////////////////////////////////////////////////////////////////////////////////
-
     //		Rendering Loop runner						//
     //////////////////////////////////////////////////////////////////////////////////
     var lastTimeMsec= null;
@@ -168,9 +183,21 @@ require([], function(){
             }
         }
 
+
         // call each update function
         onRenderFcts.forEach(function(f){
             f(deltaMsec/1000, nowMsec/1000)
-        })
+        });
+
+
+        /*Lightning*/
+        if((Math.random %  100) < 2){
+            scene.add(frontLight);
+            last_lightning = nowMsec;
+        } else{
+            if(nowMsec - last_lightning < 10){
+                scene.remove(frontLight);
+            }
+        }
     })
 });
