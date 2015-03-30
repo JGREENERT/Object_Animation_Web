@@ -43,12 +43,9 @@ require([], function(){
 
     scene.add(moon);
 
-
     var ambientLight= new THREE.AmbientLight( 0xFFFFFF );
     ambientLight.position.set(-15, 16, -23);
     scene.add( ambientLight);
-
-
 
     var frontLight	= new THREE.DirectionalLight(0xffffff, 1);
     frontLight.position.set(10, 35, 0.0);
