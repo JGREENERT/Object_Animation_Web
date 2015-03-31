@@ -35,36 +35,35 @@ require([], function(){
     var moonMat = new THREE.MeshPhongMaterial({color:0xFFFFFF});
     var moonGeo = new THREE.SphereGeometry(1, 10, 10);
     var moon = new THREE.Mesh(moonGeo, moonMat);
-
     moon.translateY(16);
     moon.translateZ(-23);
     moon.translateX(-15);
-
     scene.add(moon);
 
-    var ambientLight= new THREE.AmbientLight( 0xC0C0C0 );
-    ambientLight.position.set(-15, 16, -23);
+    /*Moon Light*/
+    var ambientLight= new THREE.AmbientLight(0xFFFFFF);
+    ambientLight.position.set(16, -23, -15);
     scene.add( ambientLight);
 
+    /*Lightning*/
     var frontLight	= new THREE.DirectionalLight(0xffffff, 1);
     frontLight.position.set(10, 35, 0.0);
-    //frontLight.position.set(-15, 16, -23)
-    // scene.add( frontLight )
-    // scene.add ( new THREE.DirectionalLightHelper (frontLight, 1));
+    scene.add( frontLight );
+    //scene.add ( new THREE.DirectionalLightHelper (frontLight, 1));
+
+    /*Lamp Light*/
     var backLight	= new THREE.SpotLight('white', 1, 0, Math.PI / 6);
     backLight.castShadow = true;
     backLight.position.set(8.8, 9.5, 0);
+    backLight.intensity = 5;
     scene.add( backLight );
-    scene.add ( new THREE.SpotLightHelper (backLight, 0.2));
-
-    var last_lightning = 0;
+    //scene.add ( new THREE.SpotLightHelper (backLight, 0.2));
 
     //////////////////////////////////////////////////////////////////////////////////
     //		add an object and make it move					//
     //////////////////////////////////////////////////////////////////////////////////
     /*Raindrop*/
     var raindrop = new Raindrop();
-    var raindrop_cf = new THREE.Matrix4();
 
     for(var i = 0; i < 50; i++){
         rainArray[i] = new Raindrop();
@@ -76,17 +75,16 @@ require([], function(){
 
     /*Merry Go Round*/
     var mgr = new MerryGoRound();
-    var mgr_cf = new THREE.Matrix4();
     scene.add(mgr);
 
     /*Lamp*/
     var lamp = new Lamp();
-    var lamp_cf = new THREE.Matrix4();
     lamp.position.x = 10;
     scene.add(lamp);
 
     //scene.add (new THREE.AxisHelper(4));
 
+    /*ground*/
     var groundPlane = new THREE.PlaneBufferGeometry(40, 40, 10, 10);
     var groundMat = new THREE.MeshPhongMaterial({color:0x1d6438});
     var ground = new THREE.Mesh (groundPlane, groundMat);
@@ -95,10 +93,10 @@ require([], function(){
 
     camera.lookAt(new THREE.Vector3(0, 5, 0));
 
+    /*Not Used*/
     onRenderFcts.push(function(delta, now){
         if (pauseAnim) return;
         var tran = new THREE.Vector3();
-        var quat = new THREE.Quaternion();
         var rot = new THREE.Quaternion();
         var vscale = new THREE.Vector3();
     });
@@ -112,39 +110,70 @@ require([], function(){
         mouse.y	= 1 - ((event.clientY - renderer.domElement.offsetTop) / renderer.domElement.height);
     }, false);
 
-    document.addEventListener('keypress', function(event){
-        var key = String.fromCharCode(event.keyCode || event.charCode);
-        if (key == 'p') {
-            pauseAnim ^= true; /* toggle it */
-        }
-    }, false);
-
     window.addEventListener("keydown", moveSomething, false);
+    window.addEventListener("keyup", moveSomethingelse, false);
+
+    var keys = [];
+    var spinDegree = 0;
+    var resetMGR = false;
+    var dropSpeed = 0.5;
 
     function moveSomething(e) {
         switch (e.keyCode) {
+            case 48:
+                if(backLight.intensity != 0)
+                    backLight.intensity = 0;
+                else
+                    backLight.intensity = 5;
+                break;
+            case 70:
+                dropSpeed -= 0.1;
+                break;
+            case 71:
+                dropSpeed += 0.1;
+                break;
+            case 80:
+                pauseAnim ^= true;
+                console.log("P was pushed");
+                break;
             case 37:
+                spinDegree += 0.05;
                 if (windX > -.4) {
                     windX -= .05;
                 }
                 break;
             case 38:
+                spinDegree += 0.05;
                 if (windZ > -.4) {
                     windZ -= .05;
                 }
                 break;
             case 39:
+                spinDegree += 0.05;
                 if (windX < .4) {
                     windX += .05;
                 }
                 break;
             case 40:
+                spinDegree += 0.05;
                 if (windZ < .4) {
                     windZ += .05;
                 }
                 break;
         }
     }
+
+    function moveSomethingelse(e) {
+        keys[e.keyCode] = false;
+        resetMGR = true;
+        if(windX != 0){
+            windX = 0;
+        }
+        if(windZ != 0){
+            windZ = 0;
+        }
+    }
+
     onRenderFcts.push(function(delta, now){
         camera.position.x += (mouse.x*30 - camera.position.x) * (delta*3);
         camera.position.y += (mouse.y*30 - camera.position.y) * (delta*3);
@@ -170,34 +199,44 @@ require([], function(){
         var deltaMsec	= Math.min(200, nowMsec - lastTimeMsec);
         lastTimeMsec	= nowMsec;
 
-        /*Animate Rain*/
-        for(var i = 0; i < rainArray.length; i++) {
-            if (rainArray[i].position.y > 0) {
-                rainArray[i].position.y -= .1;
-                rainArray[i].position.z += windZ;
-                rainArray[i].position.x += windX;
-            } else {
-                rainArray[i].position.y = 10+i;
-                rainArray[i].position.z = Math.random() * 30 - 15;
-                rainArray[i].position.x = Math.random() * 30 - 15;
+        if(!pauseAnim) {
+            /*Animate Rain*/
+            for (var i = 0; i < rainArray.length; i++) {
+                if (rainArray[i].position.y > 0) {
+                    rainArray[i].position.y -= dropSpeed;
+                    rainArray[i].position.z += windZ;
+                    rainArray[i].position.x += windX;
+                    rainArray[i].rotateX(windZ * 30);
+                    rainArray[i].rotateY(windX * 30);
+                } else {
+                    rainArray[i].position.y = 10 + i;
+                    rainArray[i].position.z = Math.random() * 30 - 15;
+                    rainArray[i].position.x = Math.random() * 30 - 15;
+                }
             }
+
+            /*Animate Merry Go Round*/
+            if (spinDegree > 0)
+                if (spinDegree > 1)
+                    mgr.rotateY(1);
+                else
+                    mgr.rotateY(spinDegree);
+
+            else
+                resetMGR = false;
+
+            if (resetMGR)
+                spinDegree -= 0.01;
+
+            /*Lightning*/
+            if (Math.random() * 50 < 2)
+                frontLight.intensity = 10;
+            else
+                frontLight.intensity = 0;
         }
-
-
         // call each update function
         onRenderFcts.forEach(function(f){
             f(deltaMsec/1000, nowMsec/1000)
         });
-
-
-        /*Lightning*/
-        if((Math.random %  100) < 2){
-            scene.add(frontLight);
-            last_lightning = nowMsec;
-        } else{
-            if(nowMsec - last_lightning < 10){
-                scene.remove(frontLight);
-            }
-        }
     })
 });
