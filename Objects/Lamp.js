@@ -2,7 +2,9 @@
  * Created by Jesse Greenert on 3/28/2015.
  */
 Lamp = function(){
-    var lampMat = new THREE.MeshPhongMaterial({color:0xFFFFFF});
+    var lampAmb = new THREE.Color(0.191250, 0.073500, 0.022500);
+    var lampSpec = new THREE.Color(0.256777, 0.137622, 0.086014);
+    var lampMat = new THREE.MeshPhongMaterial({color:0x808080, diffuse: 0x808080, ambient: lampAmb.getHex(), specular: lampSpec.getHex(), shininess: 12.800000});
     var topGeo = new THREE.TorusGeometry(1, 0.4, 80, 100, 2.5);
     var postGeo = new THREE.CylinderGeometry(0.4, 0.4, 8, 50);
     var baseGeo = new THREE.CylinderGeometry(2, 2, 0.4, 50);

@@ -3,7 +3,9 @@
  */
 
 Raindrop = function(){
-    var dropMat = new THREE.MeshPhongMaterial({color:0x0000FF})
+    var dropAmb = new THREE.Color(0.192250, 0.192250, 0.192250);
+    var dropSpec = new THREE.Color(0.508273, 0.508273, 508273);
+    var dropMat = new THREE.MeshPhongMaterial({color:0x0000FF, diffuse: 0x0000FF, ambient: dropAmb.getHex(), specular: dropSpec.getHex(), shininess: 51.2})
     var baseGeo = new THREE.SphereGeometry(0.25, 10, 10);
     var topGeo = new THREE.CylinderGeometry(0, 0.2, 0.4, 50);
     var base = new THREE.Mesh(baseGeo, dropMat);

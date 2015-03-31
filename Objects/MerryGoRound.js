@@ -3,9 +3,11 @@
  */
 MerryGoRound = function () {
     /*Material*/
-    var baseMat = new THREE.MeshPhongMaterial({color: 0xD3D3D3});
-    var platMat = new THREE.MeshPhongMaterial({color: 0xFF0000});
-    var handleMat = new THREE.MeshPhongMaterial({color: 0x0000FF});
+    var mgrSpec = new THREE.Color(0.992157, 0.941176, 0.807843);
+    var mgrAmb = new THREE.Color(0.329412, 0.223529, 0.027451);
+    var baseMat = new THREE.MeshPhongMaterial({color: 0xD3D3D3, diffuse: 0xD3D3D3, ambient: mgrAmb.getHex(), specular: mgrSpec.getHex(), shininess: 27.897400});
+    var platMat = new THREE.MeshPhongMaterial({color: 0xFF0000, diffuse: 0xFF0000, ambient: mgrAmb.getHex(), specular: mgrSpec.getHex(), shininess: 27.897400});
+    var handleMat = new THREE.MeshPhongMaterial({color: 0x0000FF, diffuse: 0x0000FF, ambient: mgrAmb.getHex(), specular: mgrSpec.getHex(), shininess: 27.897400});
 
     /*Geometry*/
     var baseGeo = new THREE.CylinderGeometry(1, 1, 2, 100, 100);
