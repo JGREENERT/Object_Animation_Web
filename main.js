@@ -84,13 +84,6 @@ require([], function(){
 
     //scene.add (new THREE.AxisHelper(4));
 
-    /*ground*/
-    var groundPlane = new THREE.PlaneBufferGeometry(40, 40, 10, 10);
-    var groundMat = new THREE.MeshPhongMaterial({color:0x1d6438});
-    var ground = new THREE.Mesh (groundPlane, groundMat);
-    ground.rotateX(THREE.Math.degToRad(-90));
-    scene.add (ground);
-
     camera.lookAt(new THREE.Vector3(0, 5, 0));
 
     /*Not Used*/
@@ -174,6 +167,28 @@ require([], function(){
         }
     }
 
+    ////////////////////////////////////////////////////////////////////
+    // TEXTURE setup
+
+    /* Load the first texture image */
+    var grass_tex = THREE.ImageUtils.loadTexture("Textures/grass.jpg");
+    /* for repeat to work, the image size must be 2^k */
+
+    /* repeat the texture 4 times in both direction */
+    grass_tex.repeat.set(4,4);
+    grass_tex.wrapS = THREE.RepeatWrapping;
+    grass_tex.wrapT = THREE.RepeatWrapping;
+
+
+    var groundPlane = new THREE.PlaneBufferGeometry(40, 40, 10, 10);
+    /* attach the texture as the "map" property of the material */
+    var groundMat = new THREE.MeshPhongMaterial({color:0x1d6438, ambient:0x1d6438, map:grass_tex});
+    var ground = new THREE.Mesh (groundPlane, groundMat);
+    ground.rotateX(THREE.Math.degToRad(-90));
+    scene.add (ground);
+
+    ////////////////////////////////////////////////////////////////////
+
     onRenderFcts.push(function(delta, now){
         camera.position.x += (mouse.x*30 - camera.position.x) * (delta*3);
         camera.position.y += (mouse.y*30 - camera.position.y) * (delta*3);
@@ -206,14 +221,16 @@ require([], function(){
                     rainArray[i].position.y -= dropSpeed;
                     rainArray[i].position.z += windZ;
                     rainArray[i].position.x += windX;
-                    rainArray[i].rotateX(windZ * 30);
-                    rainArray[i].rotateY(windX * 30);
+                    //rainArray[i].rotateX(windZ * 0.5);
+                    //rainArray[i].rotateY(windX * 0.5);
                 } else {
                     rainArray[i].position.y = 10 + i;
                     rainArray[i].position.z = Math.random() * 30 - 15;
                     rainArray[i].position.x = Math.random() * 30 - 15;
                 }
             }
+
+
 
             /*Animate Merry Go Round*/
             if (spinDegree > 0)
